@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secure-firewall-auditor"
+version = "0.3.0"
+description = "Agentic nftables auditing with operator-approved, verified source restrictions"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "google-genai>=3.3,<4"]
+gemini = ["google-genai>=3.3,<4"]
+desktop = ["PySide6>=6.8,<7", "google-genai>=3.3,<4"]
+web = ["google-genai>=3.3,<4", "cryptography>=44,<51"]
+
+[project.scripts]
+firewall-auditor = "firewall_auditor.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+firewall_auditor = ["web_assets/*.html", "web_assets/*.js", "web_assets/*.css"]

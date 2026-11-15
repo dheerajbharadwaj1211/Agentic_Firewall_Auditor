@@ -1,0 +1,15 @@
+# MANUAL FIXTURE ONLY. REVIEW/APPROVAL AND A VM SNAPSHOT REQUIRED.
+# A NEW IPv4 input default-drop chain affects live traffic.
+# Only for the isolated host-only lab in docs/phase3.md.
+# Table must not already exist. IPv6 is not changed/evaluated by this fixture.
+table ip fwa_lab {
+    chain input {
+        type filter hook input priority 10; policy drop;
+        iifname "lo" accept
+        ct state established,related accept
+        ip protocol icmp accept
+        udp sport 67 udp dport 68 accept comment "Lab DHCP reply"
+        tcp dport 22 accept comment "Preserve SSH; helper cannot change this port"
+        tcp dport 3306 accept comment "DELIBERATE LAB DATABASE EXPOSURE"
+    }
+}

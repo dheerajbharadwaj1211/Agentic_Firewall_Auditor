@@ -1,0 +1,32 @@
+[
+  {
+    "name": "ubuntu-vm",
+    "address": "127.0.0.1",
+    "port": 2222,
+    "username": "viper",
+    "identity_file": "C:/Users/YOU/.ssh/id_ed25519_firewall",
+    "known_hosts_file": "C:/Users/YOU/.ssh/known_hosts",
+    "test_vm": true,
+    "use_agent": true
+  },
+  {
+    "name": "app01",
+    "address": "192.168.56.10",
+    "port": 22,
+    "username": "labuser",
+    "identity_file": "C:/Users/YOU/.ssh/id_ed25519_firewall",
+    "known_hosts_file": "C:/Users/YOU/.ssh/known_hosts",
+    "test_vm": true,
+    "use_agent": true
+  },
+  {
+    "name": "attacker",
+    "address": "192.168.56.20",
+    "port": 22,
+    "username": "labuser",
+    "identity_file": "C:/Users/YOU/.ssh/id_ed25519_firewall",
+    "known_hosts_file": "C:/Users/YOU/.ssh/known_hosts",
+    "test_vm": true,
+    "use_agent": true
+  }
+]

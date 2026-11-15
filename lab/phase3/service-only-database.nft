@@ -1,0 +1,10 @@
+# REVIEWED LAB SETUP ONLY: creates a NEW IPv4 table; requires explicit approval.
+# Intentionally permits TCP 3306 from the host-only subnet before remediation.
+# No flush, deletion of existing rules, or persisted nftables.conf change.
+# "create table" makes an existing fwa_lab table an error, not an append target.
+create table ip fwa_lab
+add chain ip fwa_lab input { type filter hook input priority 10; policy drop; }
+add rule ip fwa_lab input iifname "lo" accept
+add rule ip fwa_lab input meta l4proto != tcp accept
+add rule ip fwa_lab input tcp dport != 3306 accept
+add rule ip fwa_lab input ip saddr 192.168.56.0/24 tcp dport 3306 counter accept comment "LAB subnet database-port access"

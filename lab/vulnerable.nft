@@ -1,0 +1,13 @@
+# MANUAL LAB FIXTURE ONLY: fresh, isolated disposable VM with console access.
+# Deliberately broad SSH/database exposure. Never applied by the application.
+table inet fwa_lab {
+    chain input {
+        type filter hook input priority 0; policy drop;
+        iifname "lo" accept
+        ct state established,related accept
+        meta l4proto { icmp, ipv6-icmp } accept
+        tcp dport 22 accept comment "LAB: broad SSH"
+        tcp dport 3306 accept comment "LAB: broad simulated database"
+        tcp dport 443 accept comment "LAB: legitimate public web control"
+    }
+}

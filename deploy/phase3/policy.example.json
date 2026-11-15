@@ -1,0 +1,17 @@
+{
+  "enabled": false,
+  "test_vm": true,
+  "exclusive_firewall_owner": false,
+  "host_alias": "ubuntu-vm",
+  "allowed_chains": [
+    "ip:fwa_lab:input"
+  ],
+  "allowed_sources": {
+    "3306": [
+      "192.168.56.10/32"
+    ]
+  },
+  "target_addresses": [
+    "192.168.56.30"
+  ]
+}

@@ -1,0 +1,20 @@
+#!/usr/bin/python3 -I
+"""Root-owned fixed entry point; check bundle before importing it."""
+import os
+from pathlib import Path
+import stat
+import sys
+if os.geteuid()!=0:
+    print('{"ok":false,"error":"Use the configured sudo helper"}');raise SystemExit(1)
+os.umask(0o077)
+bundle=Path('/usr/local/lib/firewall-auditor')
+paths=[Path('/usr/local'),Path('/usr/local/lib'),Path('/usr/local/libexec'),bundle,bundle/'firewall_auditor',
+       Path(__file__),bundle/'firewall_auditor/__init__.py',bundle/'firewall_auditor/phase3_helper.py',
+       bundle/'firewall_auditor/phase3_policy.py']
+for path in paths:
+    info=path.lstat()
+    if stat.S_ISLNK(info.st_mode) or info.st_uid!=0 or info.st_mode&0o022:
+        print('{"ok":false,"error":"Untrusted helper installation"}');raise SystemExit(1)
+sys.path.insert(0,str(bundle))
+from firewall_auditor.phase3_helper import main
+raise SystemExit(main())

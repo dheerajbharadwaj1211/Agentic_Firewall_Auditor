@@ -1,0 +1,11 @@
+[
+  {
+    "name": "db01",
+    "address": "192.0.2.10",
+    "username": "auditor",
+    "identity_file": "C:/replace/with/your/dedicated_private_key",
+    "known_hosts_file": "C:/replace/with/your/verified_known_hosts",
+    "port": 22,
+    "test_vm": true
+  }
+]

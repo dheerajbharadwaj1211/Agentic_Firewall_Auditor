@@ -1,0 +1,17 @@
+{
+  "destination": "192.168.56.30",
+  "port": 3306,
+  "source_nat": false,
+  "checks": [
+    {
+      "host": "app01",
+      "source_ip": "192.168.56.10",
+      "expect": "allowed"
+    },
+    {
+      "host": "attacker",
+      "source_ip": "192.168.56.20",
+      "expect": "denied"
+    }
+  ]
+}

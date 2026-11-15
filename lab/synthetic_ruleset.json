@@ -1,0 +1,8 @@
+{
+  "nftables": [
+    {"metainfo": {"json_schema_version": 1}},
+    {"table": {"family": "inet", "name": "lab"}},
+    {"chain": {"family": "inet", "table": "lab", "name": "input", "type": "filter", "hook": "input", "prio": 0, "policy": "drop"}},
+    {"rule": {"family": "inet", "table": "lab", "chain": "input", "handle": 1, "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": 3306}}, {"accept": null}], "comment": "SYNTHETIC FIXTURE: deliberately broad database rule"}}
+  ]
+}
