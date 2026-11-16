@@ -1,97 +1,146 @@
-> **Phase 4 desktop console is available; native live acceptance is pending.**
-> Run `.venv\Scripts\python.exe scripts\run_desktop.py` in native PowerShell.
-> See [Phase 4 guide and demo](docs/phase4.md). No firewall changes were made for Phase 4.
-
-> **Phase 3 passed scoped live acceptance.** See [acceptance evidence](docs/phase3-acceptance.md).
-> The current verified lab rule permits APP02 and blocks ATTACKER on IPv4 TCP 3306;
-> management SSH remains available, and independent watchdog restoration was demonstrated.
-> Earlier implementation-status notes below are historical.
-
-> Phase 3 implementation is now available. See [Phase 3 guide](docs/phase3.md)
-> for exact approval, root helper, verification, rollback and live acceptance.
-> No real Phase 3 firewall modification or helper deployment has been performed.
-
 # Secure Agentic Firewall Auditor
 
-**Phase 2 passed live Gemini + VM acceptance; see [acceptance report](docs/phase2-acceptance.md).
-Phase 2 is implemented with Gemini. See [Phase 2 guide](docs/phase2.md)
-for secure launch, configuration, evidence reports and acceptance status.**
-The Phase 1 description below is retained as history; read-only inspection tools
-remain in use. No firewall modification capability has been added.
+A Python application that inspects real Linux nftables firewalls, gathers host and network evidence, and uses Gemini to investigate potential misconfigurations through controlled tools.
 
+Includes a local HTTPS interface, a PySide6 desktop console, and a separate command-line workflow for approved firewall changes with verification and rollback protection.
 
-Phase 1 foundation of a one-month graduate security project. The foundation reads an explicitly
-configured Linux test VM over SSH and normalizes nftables JSON. Phase 2 now adds Gemini-driven inspection and evidence-grounded findings.
-GUI, firewall modification, connectivity verification, rollback and persistent
-audit storage remain later-phase work. No security finding or effective Internet
-exposure is asserted by this version.
+## Features
 
-In simple terms, the final application is an AI firewall inspector. It collects
-evidence, recommends a fix, asks a human to approve it, then checks that the fix
-blocks unwanted traffic while preserving required traffic.
+- Inspect firewall rules, listening services, interfaces, IPv4/IPv6 routes and host information over SSH.
+- Use structured Gemini function calls with validated tools, arguments and target hosts.
+- Produce evidence-backed findings, recommendations and coverage notes.
+- Run read-only audits through the web interface or desktop console.
+- Apply narrowly scoped source restrictions with explicit human approval.
+- Verify legitimate access, unauthorized-client blocking and management connectivity.
+- Maintain audit records and target-local rollback protection.
 
-## Run locally
+## Requirements
 
-Python 3.11+ and OpenSSH client are required. Runtime Python dependencies: none.
-From this project folder in PowerShell:
+- Python 3.11+
+- OpenSSH client
+- Linux test VM with nftables and SSH access
+- Gemini API key and a function-calling model
+- Native Windows PowerShell for the supplied launchers and SSH-agent setup
+
+The tested model is `models/gemini-3.1-flash-lite`, using API version `v1beta`.
+
+## Installation
+
+From the repository directory:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e '.[dev]'
-.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pip install -e ".[dev,web,desktop]"
+```
+
+## Configuration
+
+If local configurations do not already exist, copy the examples:
+
+```powershell
+Copy-Item config/hosts.example.json config/hosts.local.json
+Copy-Item config/context.example.json config/context.local.json
+```
+
+Update the SSH address, port, username, dedicated identity path and verified known-hosts path. Configure the host role and service dependencies in the context file.
+
+The supplied native launchers use the target alias `ubuntu-vm`; use that alias in both local configurations.
+
+For an encrypted identity loaded into the Windows SSH agent, set `use_agent` to `true` in the host profile. Preserve strict host-key checking. Grant only narrowly scoped read-only sudo permission for nftables inspection.
+
+
+## Usage
+
+### Desktop console
+
+Load the dedicated SSH key and start the console:
+
+```powershell
+ssh-add "$env:USERPROFILE\.ssh\id_ed25519_firewall"
+.\.venv\Scripts\python.exe scripts/run_desktop.py
+```
+
+Enter the Gemini API key at the hidden prompt, select the configured target and click **Run live audit**. Network work runs in a background worker.
+
+### Local HTTPS interface
+
+Generate certificates once:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/run_web.py --init-cert
+```
+
+Follow the [HTTPS guide](docs/web-interface.md) to inspect the generated CA and establish local browser trust. Do not bypass certificate warnings or overwrite existing certificates unnecessarily.
+
+Start the server:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/run_web.py
+```
+
+Enter a local access password and Gemini API key at the hidden prompts. Open **https://127.0.0.1:8443/**, sign in and submit an investigation request. Keep the terminal running.
+
+The server listens only on loopback; the URL is accessible from the same computer, not other class machines.
+
+### Command-line inspection
+
+```powershell
+.\.venv\Scripts\python.exe -m firewall_auditor.cli inspect --hosts config/hosts.local.json --host ubuntu-vm
+```
+
+Offline normalization without contacting a VM:
+
+```powershell
 .\.venv\Scripts\python.exe -m firewall_auditor.cli normalize lab/synthetic_ruleset.json
 ```
 
-Without installation, use `PYTHONPATH=src` (PowerShell syntax below):
+### Approved remediation
+
+Firewall changes use the separate CLI, not the read-only web or desktop audit interfaces:
 
 ```powershell
-$env:PYTHONPATH = (Resolve-Path src).Path
-python -m unittest discover -s tests -v
-python -m firewall_auditor.cli normalize lab/synthetic_ruleset.json
+.\.venv\Scripts\python.exe scripts/run_phase3.py --help
 ```
 
-`normalize` is explicitly marked `offline_fixture`; it never contacts a host.
-Both pytest and unittest can run the tests. The VM integration test is skipped
-unless explicitly enabled. See [lab guide](docs/lab.md) before configuring a VM.
+
+## Testing
 
 ```powershell
-python -m firewall_auditor.cli inspect --hosts config/hosts.local.json --host db01
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
-`inspect` executes real read-only operations. Errors stop the snapshot rather than
-being reported as empty/safe observations. Output is JSON and may include private
-network details. Save it only to a protected local directory. JSON escapes terminal
-control characters; future GUI/LLM code must still treat all observations as data.
+The latest recorded local run completed with **111 passed tests, 57 passed subtests and 4 skipped live tests**. Gated live tests require explicit configuration and are separate from local fixture-based tests.
 
-## Structure
+Real desktop and web audits completed against the Ubuntu lab VM. A scoped IPv4 TCP/3306 restriction and independent watchdog restoration were also demonstrated.
+
+
+## Project Structure
 
 ```text
-docs/project_requirements.pdf   supplied authoritative 30-page specification
-docs/plan.md                    architecture, MVP, milestones, open decisions
-docs/lab.md                     isolated VM setup and live test procedure
-docs/validation.md              results and limitations of this implementation
-src/firewall_auditor/
-  models.py                    normalized chain/rule/ruleset models
-  nftables.py                  conservative JSON adapter
-  transport.py                 validated hosts and fixed OpenSSH operations
-  tools.py                     allowlisted inspection dispatch
-  cli.py                       temporary read-only console
-tests/                         synthetic, mocked transport and opt-in VM tests
-config/hosts.example.json       placeholder configuration, no secrets
-lab/                           synthetic JSON and manually applied lab rules
+src/firewall_auditor/   Agent, adapters, policy, reporting and interfaces
+scripts/               Launchers and lab validation utilities
+config/                Example configuration and ignored local settings
+lab/                   Synthetic fixtures and controlled lab scenarios
+tests/                 Unit, integration and opt-in live tests
+docs/                  Setup, architecture, validation and operation guides
 ```
 
-Phase 1 was reviewed and accepted against the real VM; see docs/phase1-acceptance.md. Future
-packages (`security`, `remediation`, `audit`, `ui`) will be added
-when implemented; there are no placeholder production claims.
+## Security
 
-## Ubuntu VirtualBox target
+The LLM has no arbitrary shell or root execution tool. Deterministic code validates requests before fixed commands execute. Remote observations are treated as untrusted data.
 
-See [VM authentication and read-only sudo setup](docs/ubuntu-virtualbox-setup.md).
-The configured local target is `viper@127.0.0.1:2222` (`ubuntu-vm`).
-An encrypted key can use the local SSH agent through explicit `use_agent: true`.
-Agent forwarding stays disabled. `ss -lntup` output is now normalized and retained.
+The web interface uses authentication, secure session cookies, CSRF and origin checks, request limits and bounded jobs. Remediation requires exact, expiring, one-use approval and independent privileged-helper policy checks.
 
-## Local HTTPS interface
+Never commit API keys, passwords, SSH/TLS private keys or sensitive reports. Enter credentials locally and keep them out of investigation goals.
 
-The Phase 2 web interface wraps the existing read-only agent. Start with `scripts/run_web.py --init-cert`, establish local certificate trust explicitly, then run `scripts/run_web.py` in native Windows PowerShell. See [the HTTPS operation guide](docs/web-interface.md) and [observed validation](docs/web-validation.md). Default test URL: `https://127.0.0.1:8443/`. No Phase 3 mutation or approval routes are exposed.
+Local settings, TLS material, generated reports, snapshots and audit databases are excluded from version control.
+
+## Limitations
+
+- Linux/nftables is the supported MVP; other firewall products and Windows Defender Firewall are not implemented.
+- Some nftables expressions and interactions between chains are not fully analyzed. Findings are configuration-risk candidates, not proof of effective reachability or Internet exposure.
+- Agent sequencing can require an explicit request; incomplete evidence produces an incomplete audit.
+- Live remediation validation covers a limited IPv4 TCP/3306 lab scenario with a TCP test service, not a MySQL deployment.
+- Remediation approval is a CLI workflow rather than a desktop approval dialog.
+- Browser certificate trust remains unresolved in the current operator setup. A certificate warning must be resolved before claiming trusted HTTPS.
+- Shared Cyber Range deployment and class access are not yet complete. The HTTPS server is designed for one local operator.
